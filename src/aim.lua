@@ -1,9 +1,10 @@
 -- src/aim.lua
 -- aim application + prediction
 
-local Services = require(script.Parent.services)
-local Config = require(script.Parent.config)
-local Target = require(script.Parent.target)
+local Modules = getgenv().GeoBModules or {}
+local Services = Modules.services
+local Config = Modules.config
+local Target = Modules.target
 
 local Camera = Services.GetCamera()
 local UIS = Services.UIS
@@ -12,11 +13,10 @@ local LocalPlayer = Services.LocalPlayer
 
 local Aim = {}
 Aim.Connection = nil
-Aim.LastVelocity = {}          -- [player] = Vector3
-Aim.SmoothedVelocity = {}      -- [player] = Vector3
+Aim.LastVelocity = {}
+Aim.SmoothedVelocity = {}
 
 local function getProjectileSpeed()
-    -- try to read from equipped tool, fallback to config
     local char = LocalPlayer.Character
     if char then
         local tool = char:FindFirstChildOfClass("Tool")
@@ -84,15 +84,10 @@ local function applyCamera(targetPos, dt)
     local goal = getAimCFrame(targetPos)
     local smooth = math.clamp(Config.Smoothness or 0.18, 0.001, 1)
 
-    -- independent axis feel
-    local sx = Config.SmoothnessX or smooth
-    local sy = Config.SmoothnessY or smooth
-
     local current = Camera.CFrame
     local look = current.LookVector
     local goalLook = goal.LookVector
 
-    -- simple spherical lerp approximation
     local alpha = 1 - math.exp(-dt / math.max(smooth, 0.001))
     local newLook = look:Lerp(goalLook, alpha)
 
@@ -112,7 +107,6 @@ local function applyMouse(targetPos)
     local smooth = math.clamp(Config.Smoothness or 0.18, 0.001, 1)
     local move = delta * (1 - smooth)
 
-    -- executor mouse API (common across most)
     if mousemoverel then
         mousemoverel(move.X, move.Y)
     elseif Input and Input.MouseMove then
@@ -121,8 +115,6 @@ local function applyMouse(targetPos)
 end
 
 local function applySilent(targetPos)
-    -- silent aims by overwriting camera look for the current frame only
-    -- most silent implementations also hook the tool fire; this is the camera half
     local goal = getAimCFrame(targetPos)
     Camera.CFrame = goal
 end
