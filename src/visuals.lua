@@ -1,9 +1,10 @@
 -- src/visuals.lua
 -- FOV circle, snaplines, target highlight, info text
 
-local Services = require(script.Parent.services)
-local Config = require(script.Parent.config)
-local Target = require(script.Parent.target)
+local Modules = getgenv().GeoBModules or {}
+local Services = Modules.services
+local Config = Modules.config
+local Target = Modules.target
 
 local Camera = Services.GetCamera()
 local RunService = Services.RS
@@ -94,7 +95,6 @@ local function updateSnapline(best)
 end
 
 local function updateHighlight(best)
-    -- clean old
     if Visuals.Highlight then
         Visuals.Highlight:Destroy()
         Visuals.Highlight = nil
@@ -143,8 +143,6 @@ function Visuals.Step()
 
     local best = nil
     if Config.Enabled then
-        -- Target.Current is already set by aim step; we just need the data again
-        -- cheap path: re-use the last best if still valid
         if Target.Current then
             local char = Target.Current.Character
             if char then
