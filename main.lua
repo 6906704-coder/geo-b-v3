@@ -1,17 +1,24 @@
 -- main.lua
 -- geo-b-v3 entry point
 
--- secure mode before anything else
 getgenv().RAYFIELD_SECURE = true
 
 local Rayfield = loadstring(game:HttpGet("https://sirius.menu/gen2"))()
 
-local Services = require(script.Parent.src.services)
-local Config = require(script.Parent.src.config)
-local Target = require(script.Parent.src.target)
-local Aim = require(script.Parent.src.aim)
-local Visuals = require(script.Parent.src.visuals)
-local Anti = require(script.Parent.src.anti)
+-- load modules from github
+local BASE = "https://raw.githubusercontent.com/6906704-coder/geo-b-v3/main/src/"
+
+local function load(name)
+    local source = game:HttpGet(BASE .. name .. ".lua")
+    return loadstring(source)()
+end
+
+local Services = load("services")
+local Config   = load("config")
+local Target   = load("target")
+local Aim      = load("aim")
+local Visuals  = load("visuals")
+local Anti     = load("anti")
 
 -- create window
 local Window = Rayfield:CreateWindow({
@@ -29,7 +36,7 @@ local Window = Rayfield:CreateWindow({
 getgenv().GeoBV3_Window = Window
 
 -- // Tabs
-local AimTab = Window:CreateTab({ name = "Aim", icon = "crosshair" })
+local AimTab     = Window:CreateTab({ name = "Aim",     icon = "crosshair" })
 local VisualsTab = Window:CreateTab({ name = "Visuals", icon = "eye" })
 local SettingsTab = Window:CreateTab({ name = "Settings", icon = "settings" })
 
