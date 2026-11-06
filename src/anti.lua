@@ -1,15 +1,14 @@
 -- src/anti.lua
 -- light hygiene, namespace guard, full unload
 
-local Services = require(script.Parent.services)
-local Config = require(script.Parent.config)
+local Modules = getgenv().GeoBModules or {}
+local Services = Modules.services
+local Config = Modules.config
 
 local Anti = {}
 
--- prevent double-load
 local ENV = getgenv()
 if ENV.GeoBV3 then
-    warn("[geo-b-v3] already loaded, unloading old instance")
     if ENV.GeoBV3.Unload then
         ENV.GeoBV3.Unload()
     end
@@ -65,22 +64,19 @@ function Anti.Cleanup()
 end
 
 function Anti.Unload()
-    -- stop systems if they expose Stop
-    local okAim, Aim = pcall(require, script.Parent.aim)
-    if okAim and Aim.Stop then Aim.Stop() end
+    local Aim = Modules.aim
+    local Visuals = Modules.visuals
+    local Target = Modules.target
 
-    local okVis, Visuals = pcall(require, script.Parent.visuals)
-    if okVis and Visuals.Stop then Visuals.Stop() end
-
-    local okTarget, Target = pcall(require, script.Parent.target)
-    if okTarget and Target.Reset then Target.Reset() end
+    if Aim and Aim.Stop then Aim.Stop() end
+    if Visuals and Visuals.Stop then Visuals.Stop() end
+    if Target and Target.Reset then Target.Reset() end
 
     Anti.Cleanup()
 
     Config.Enabled = false
     ENV.GeoBV3 = nil
 
-    -- if Rayfield window exists, kill it
     if ENV.GeoBV3_Window and ENV.GeoBV3_Window.Unload then
         pcall(function()
             ENV.GeoBV3_Window:Unload()
@@ -89,11 +85,10 @@ function Anti.Unload()
     end
 end
 
--- basic character cleanup on respawn
 Services.LocalPlayer.CharacterAdded:Connect(function()
     task.wait(0.5)
-    local okTarget, Target = pcall(require, script.Parent.target)
-    if okTarget and Target.Reset then
+    local Target = Modules.target
+    if Target and Target.Reset then
         Target.Reset()
     end
 end)
