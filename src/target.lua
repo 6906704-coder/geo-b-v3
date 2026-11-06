@@ -1,8 +1,9 @@
 -- src/target.lua
 -- universal target acquisition + weighted scoring
 
-local Services = require(script.Parent.services)
-local Config = require(script.Parent.config)
+local Modules = getgenv().GeoBModules or {}
+local Services = Modules.services
+local Config = Modules.config
 
 local Players = Services.Players
 local LocalPlayer = Services.LocalPlayer
@@ -17,7 +18,7 @@ local BONE_PRIORITY = {
     Head = 1,
     UpperTorso = 2,
     HumanoidRootPart = 3,
-    Torso = 3,          -- R6
+    Torso = 3,
     LowerTorso = 4,
 }
 
@@ -29,7 +30,6 @@ local function isKnocked(character)
     if not Config.IgnoreKnocked then return false end
     local humanoid = character:FindFirstChildOfClass("Humanoid")
     if not humanoid then return true end
-    -- common knockdown patterns
     if humanoid:GetState() == Enum.HumanoidStateType.Physics then return true end
     if character:FindFirstChild("Knocked") or character:GetAttribute("Knocked") then return true end
     return false
@@ -46,7 +46,7 @@ end
 
 local function teamCheck(player)
     if not Config.TeamCheck then return true end
-    if not LocalPlayer.Team then return true end          -- FFA / no teams
+    if not LocalPlayer.Team then return true end
     if player.Team == nil then return true end
     return player.Team ~= LocalPlayer.Team
 end
@@ -72,7 +72,6 @@ local function wallCheck(fromPos, toPos, character)
     local result = Workspace:Raycast(fromPos, direction, params)
 
     if not result then return true end
-    -- if we hit something that belongs to the target character, still count as visible
     return result.Instance:IsDescendantOf(character)
 end
 
@@ -97,7 +96,6 @@ local function getBone(character)
     local bone = character:FindFirstChild(preferred)
     if bone and bone:IsA("BasePart") then return bone end
 
-    -- fallback chain
     return character:FindFirstChild("Head")
         or character:FindFirstChild("UpperTorso")
         or character:FindFirstChild("Torso")
@@ -136,7 +134,6 @@ local function scoreTarget(player, character, humanoid, bone)
         return nil
     end
 
-    -- FOV gate (soft)
     local fov = Config.FOV or 120
     if Target.Current == player then
         fov = fov * (Config.StickyFOV or 1.15)
@@ -145,7 +142,6 @@ local function scoreTarget(player, character, humanoid, bone)
         return nil
     end
 
-    -- scoring
     local score = 0
     local priority = Config.Priority or "Crosshair"
 
@@ -211,13 +207,11 @@ function Target.GetBest()
 
     local best = candidates[1]
 
-    -- soft lock / switch delay
     if Config.SoftLock and Target.Current then
         local stillValid = false
         for _, c in ipairs(candidates) do
             if c.Player == Target.Current then
                 stillValid = true
-                -- if the old target is still decent, keep it
                 if c.Score > best.Score * 0.82 then
                     best = c
                 end
@@ -226,7 +220,6 @@ function Target.GetBest()
         end
 
         if stillValid and (os.clock() - Target.LastSwitch) < (Config.SwitchDelay or 0.12) then
-            -- force keep during switch delay
             for _, c in ipairs(candidates) do
                 if c.Player == Target.Current then
                     best = c
