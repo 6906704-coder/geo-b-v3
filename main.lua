@@ -8,9 +8,15 @@ local Rayfield = loadstring(game:HttpGet("https://sirius.menu/gen2"))()
 -- load modules from github
 local BASE = "https://raw.githubusercontent.com/6906704-coder/geo-b-v3/main/src/"
 
+local Modules = {}
+getgenv().GeoBModules = Modules
+
 local function load(name)
     local source = game:HttpGet(BASE .. name .. ".lua")
-    return loadstring(source)()
+    local fn = assert(loadstring(source), "failed to load " .. name)
+    local result = fn()
+    Modules[name] = result
+    return result
 end
 
 local Services = load("services")
